@@ -1,0 +1,48 @@
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+
+class MY_Controller extends CI_Controller{
+
+  public $assets_version = "1.0.0";
+  
+  public function __construct() {
+    parent::__construct();
+    $this->auth();
+  }
+
+  public function auth() {
+    if (!$this->ion_auth->logged_in()){
+      redirect(base_url().'signin', 'refresh');
+    }
+  }
+  
+  // default layout
+  public function views($template, $data=null)
+  {
+    if (!$this->ion_auth->logged_in()){
+      redirect(base_url().'signin', 'refresh');
+    }else{
+      $data['user'] = $this->ion_auth->user()->row();
+      $this->load->view('layout/header', $data);
+      $this->load->view($template, $data);
+      $this->load->view('layout/footer');
+    }
+  }
+
+  public function CoreLog($param) {
+    if ($this->ion_auth->logged_in()) {
+      $users = $this->ion_auth->user()->row();
+      $title = ($param == null) ? 'Sample Dev':$param;
+      // tidak bisa pakai ip address auth, bisa jadi user disconnect dengan ip dynamic
+      $data = array(
+        'time'    => date('Y-m-d H:i:s'),
+        'ip'      => $this->input->ip_address(),
+        'action'  => $title,
+        'user'    => $users->id
+      );
+      $this->db->insert('activity', $data);
+    }
+  }
+
+}
+
+?>
